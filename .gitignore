@@ -1,6 +1,6 @@
 Assets/Standard\ Assets
 Assets/SampleScenes
-.meta
+*.meta
 
 # This .gitignore file should be placed at the root of your Unity project directory
 #

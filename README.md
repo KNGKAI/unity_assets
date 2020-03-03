@@ -1,3 +1,10 @@
-Unity assets
+# Unity assets
 
-Better Character controller, Infinite Terrain system, Inventory and crafting system, Plant Generator
+**Assets and Features**
+
+- Better Character controller
+  - Smooth movement
+- Infinite Terrain system
+  - Multi layers
+- Inventory and crafting system
+- Plant Generator

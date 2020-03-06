@@ -2,41 +2,51 @@
 
 **Assets and Features**
 
-- Better Character controller
-  - Multiple movement types
+1. Character controller
+2. Infinite terrain system
+3. Inventory and crafting system
+4. Plant generator
+5. Grid automata
+6. Weapons
+7. Vehicles
+8. AI
+
+### 1. Character controller
+
+- Multiple movement types
     - Immediate, Continuous, Tank etc.
-  - Smooth movement
-  - Camera Controll
-    - FPS, TPS, Top Down, etc.
-    - Player only
-  - Air Controll
-  - Extreme optimization
+- Smooth movement
+- Camera Controll
+  - FPS, TPS, Top Down, etc.
+  - Player only
+- Air Controll
+- Extreme optimization
   
-- Infinite Terrain system
-  - Multi layers
-  - Better noise
-  - Natural Generation
-    - Rivers, mountains, cliffs etc.
+### 2. Infinite terrain system
+- Multi layers
+- Better noise
+- Natural Generation
+  - Rivers, mountains, cliffs etc.
   
-- Inventory and crafting system
-  - Multiple inventory types
-    - Grid inventory, Weight invenory etc.
-  - Item database
+### 3. Inventory and crafting system
+- Multiple inventory types
+  - Grid inventory, Weight invenory etc.
+- Item database
   
-- Plant Generator
-  - Multiple plant type
-    - Tree, bush, flower etc.
+### 4. Plant Generator
+- Multiple plant type
+  - Tree, bush, flower etc.
     
-- Grid Automata
-  - Cellar Automata rules
-  - Grid Manipulation
+### 5. Grid Automata
+- Cellar Automata rules
+- Grid Manipulation
 
-- Weapons
-  - Raycast weapon / hitscan
-  - Projectile Luancher
-  - Gravity gun
+### 6. Weapons
+- Raycast weapon / hitscan
+- Projectile Luancher
+- Gravity gun
 
-- Vehicles
+### 7. Vehicles
 
-- AI
+### 8. AI
   - Daily routine / Chores

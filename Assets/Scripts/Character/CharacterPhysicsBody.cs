@@ -14,18 +14,27 @@ public class CharacterPhysicsBody : MonoBehaviour
         public float levelLerp;
         public int groundCheckResolution;
         public float groundSphereShave;
+        public bool checkHeightChange;
     }
 
     public PhysicsBodySettings settings = new PhysicsBodySettings()
     {
         levelLerp = 0.5f,
         groundCheckResolution = 32,
-        groundSphereShave = 0.01f
+        groundSphereShave = 0.01f,
+        checkHeightChange = true
     };
 
-    private static LayerMask mask = 0;
+    public enum PositionalType
+    {
+        Normal,
+        Translate,
+        CheckTranslate
+    }
 
-    private static float relativeVerticalVelocity;
+    public PositionalType positionType;
+
+    private static LayerMask mask = 0;
 
     public static LayerMask Mask
     {
@@ -49,6 +58,7 @@ public class CharacterPhysicsBody : MonoBehaviour
             {
                 rig = GetComponent<Rigidbody>();
                 rig.constraints = RigidbodyConstraints.FreezeRotation;
+                rig.useGravity = false;
             }
             return (rig);
         }
@@ -112,17 +122,57 @@ public class CharacterPhysicsBody : MonoBehaviour
             {
                 value = Radius * 2.0f;
             }
-            if (Physics.CheckCapsule(
-                Position + Vector3.up * (Cap.radius * 2.0f),
-                Position + Vector3.up * (value - Cap.radius),
-                Cap.radius,
-                Mask))
+            if (settings.checkHeightChange && value > Height)
             {
-                return;
+                if (Physics.CheckCapsule(
+                    Position + Vector3.up * (Cap.radius * 2.0f),
+                    Position + Vector3.up * (value - Cap.radius),
+                    Cap.radius,
+                    Mask))
+                {
+                    return;
+                }
             }
             value -= Radius;
             Cap.center = Vector3.up * (value / 2.0f + Cap.radius);
             Cap.height = value;
+        }
+    }
+
+    public Vector3 Position
+    {
+        get
+        {
+            return (transform.position);
+        }
+        set
+        {
+            switch (positionType)
+            {
+                case PositionalType.Normal:
+                    transform.position = value;
+                    break;
+                case PositionalType.Translate:
+                    transform.Translate(value - transform.position);
+                    break;
+                case PositionalType.CheckTranslate:
+                    Vector3 v, p;
+
+                    v = value - transform.position;
+                    p = transform.position + v;
+
+                    if (!Physics.CheckCapsule(
+                        Position + Vector3.up * (Cap.radius * 2.0f),
+                        Position + Vector3.up * (Height - Cap.radius),
+                        Cap.radius,
+                        Mask))
+                    {
+                        transform.Translate(v);
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -156,40 +206,80 @@ public class CharacterPhysicsBody : MonoBehaviour
 
     public bool Grounded { get { return (grounded); } }
 
-    public Vector3 Position
+    public bool JumpGrounded { get { return (ground.Tick < Ticker.DefaultTick); } }
+
+    private Vector3 groundNormal;
+
+    public Vector3 GroundNormal
     {
         get
         {
-            return (transform.position);
+            return (groundNormal);
         }
-        set
+    }
+
+    private float groundNormalAngle;
+
+    public float GroundNormalAngle
+    {
+        get
         {
-            transform.position = value;
+            return (groundNormalAngle);
         }
     }
 
     private void CheckGrounded(out float level)
     {
+        RaycastHit[] hits;
         Vector3 position;
 
-        level = 0.0f;
+        level = Position.y;
         grounded = false;
-        if (Velocity.y > 0.0f)
+        groundNormal = Vector3.up;
+        groundNormalAngle = 0.0f;
+
+        position = Position;
+        position.y = Radius;
+
+        /*
+        if (Physics.SphereCast(position, Radius - settings.groundSphereShave, Vector3.down, out RaycastHit hit, Radius * Radius, Mask))
         {
-            ground.Act();
-            return;
+            level = position.y - hit.distance;
+
+            ground.Procces();
+            grounded = !ground.Active;
+            if (grounded)
+            {
+                groundNormal = hit.normal;
+            }
         }
+        */
 
         for (int i = settings.groundCheckResolution; i >= (Velocity.y > 0 ? 0 : -settings.groundCheckResolution); i--)
         {
             position = Position;
             level = (float)(i) / settings.groundCheckResolution * Radius;
             position.y += level + Radius;
-            if (Physics.CheckSphere(position, Radius - settings.groundSphereShave, Mask))
+
+            hits = Physics.SphereCastAll(position, Radius - settings.groundSphereShave, Vector3.down, settings.groundSphereShave, Mask);
+
+            if (hits.Length > 0)
             {
                 level = position.y - Radius - settings.groundSphereShave;
+
                 ground.Procces();
                 grounded = !ground.Active;
+
+                groundNormal = Vector3.zero;
+                foreach (RaycastHit h in hits)
+                {
+                    groundNormal += h.normal;
+                }
+                groundNormal /= hits.Length;
+                groundNormal.Normalize();
+
+                groundNormalAngle = Vector3.Angle(groundNormal, Vector3.up);
+
                 return;
             }
         }
@@ -201,11 +291,35 @@ public class CharacterPhysicsBody : MonoBehaviour
     {
         get
         {
+            return (new Vector2(Velocity.x, Velocity.z));
+        }
+    }
+
+    public float PlaneSpeed
+    {
+        get
+        {
+            return (Mathf.Sqrt(Velocity.x * Velocity.x + Velocity.z * Velocity.z));
+        }
+        set
+        {
             Vector3 v;
+            float y;
 
             v = Velocity;
-            return (new Vector2(v.x, v.z));
+            y = v.y;
+            v.y = 0;
+
+            v = v.normalized * value;
+            v.y = y;
+
+            Velocity = v;
         }
+    }
+
+    public bool Wall()
+    {
+        return (false);
     }
 
     public void SetPlaneVelocity(float x, float y)
@@ -244,6 +358,23 @@ public class CharacterPhysicsBody : MonoBehaviour
         Velocity = v;
     }
 
+    public void Strafe(float a)
+    {
+        transform.Rotate(0, a, 0, Space.World);
+        Velocity = Quaternion.Euler(0, a, 0) * Velocity;
+
+        a = Mathf.Abs(a) * Time.deltaTime;
+
+        if (PlaneSpeed > 0)
+        {
+            PlaneSpeed += a;
+        }
+        else
+        {
+            SetPlaneVelocity(transform.forward.x * a, transform.forward.z * a);
+        }
+    }
+
     private void FixedUpdate()
     {
         Vector3 v;
@@ -253,28 +384,8 @@ public class CharacterPhysicsBody : MonoBehaviour
         if (Grounded)
         {
             v = Position;
-            v.y = Mathf.Lerp(v.y, level, settings.levelLerp);
-
-            relativeVerticalVelocity = v.y - Position.y;
-
-            if (relativeVerticalVelocity > 0)
-            {
-                v.y += relativeVerticalVelocity;
-            }
-
-            if (v.y < Position.y ||
-                !Physics.CheckCapsule(
-                    Position + Vector3.up * (Radius * (2.0f + relativeVerticalVelocity)),
-                    Position + Vector3.up * (Height - Radius + relativeVerticalVelocity),
-                    Cap.radius,
-                    Mask))
-            {
-                Position = v;
-            }
-
-            v = Velocity;
-            v.y = 0.0f;
-            Velocity = v;
+            v.y = Mathf.Lerp(v.y, level + Velocity.y * Time.fixedDeltaTime, settings.levelLerp);
+            Position = v;
         }
     }
 }

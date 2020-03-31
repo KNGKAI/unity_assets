@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CharacterCamera : CharacterBase
+public class CharacterCamera : CharacterStance
 {
     [System.Serializable]
     public struct CameraSettings

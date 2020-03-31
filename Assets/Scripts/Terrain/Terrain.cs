@@ -106,8 +106,14 @@ public class Terrain
             return (false);
         }
 
+        public static void Refresh()
+        {
+            
+        }
+
         public static void DestroyAll()
         {
+            Refresh();
             for (int i = 0; i < Chunks.Count; i++)
             {
                 Destroy(Chunks[i].gameObject);

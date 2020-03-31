@@ -10,14 +10,12 @@ public class CharacterBase : Thing
     {
         public float height;
         public float radius;
-        public float crouchHeight;
     }
 
     public CharacterSettings characterSettings = new CharacterSettings()
     {
         height = 2.0f,
-        radius = 0.5f,
-        crouchHeight = 1.0f
+        radius = 0.4f
     };
 
     private CharacterPhysicsBody body;
@@ -32,13 +30,5 @@ public class CharacterBase : Thing
             }
             return (body);
         }
-    }
-
-    private void Awake()
-    {
-        gameObject.layer = LayerMask.NameToLayer("Character");
-
-        Body.Radius = characterSettings.radius;
-        Body.Height = characterSettings.height;
     }
 }

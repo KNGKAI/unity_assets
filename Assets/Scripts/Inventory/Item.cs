@@ -2,9 +2,29 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "new_item", menuName = "Item")]
+[CreateAssetMenu(fileName = "new_item", menuName = "Thing/Item")]
 public class Item : ScriptableObject
 {
+    public static bool Craft(ref Inventory inventory, Recipe recipe)
+    {
+        foreach (KeyValuePair<int, int> i in recipe.Inv.Items)
+        {
+            if (inventory.Amount(i.Key) < i.Value)
+            {
+                return (false);
+            }
+        }
+
+        foreach (KeyValuePair<int, int> i in recipe.Inv.Items)
+        {
+            inventory.Remove(i.Key, i.Value);
+        }
+
+        inventory.Add(recipe.result);
+
+        return (true);
+    }
+
     private static List<Item> items;
 
     public static List<Item> Items
@@ -13,7 +33,7 @@ public class Item : ScriptableObject
         {
             if (items == null)
             {
-                items = new List<Item>();
+                LoadAll();
             }
             return (items);
         }
@@ -21,17 +41,37 @@ public class Item : ScriptableObject
 
     public static void LoadAll()
     {
-        Items.Clear();
-        Items.AddRange(Resources.LoadAll<Item>("Items"));
+        items = new List<Item>();// { new Item() { name = "none", id = 0 } };
+        foreach (Item item in Resources.LoadAll<Item>("Items"))
+        {
+            if (!Contains(item.name))
+            {
+                Add(item);
+            }
+        }
+    }
+
+    public static bool Contains(int id)
+    {
+        return (!(id >= Items.Count || id < 0));
+    }
+
+    public static bool Contains(string name)
+    {
+        foreach (Item item in Items)
+        {
+            if (item.name == name)
+            {
+                return (true);
+            }
+
+        }
+        return (false);
     }
 
     public static Item Get(int id)
     {
-        if (id >= Items.Count || id < 0)
-        {
-            return (null);
-        }
-        return (Items[id]);
+        return (Contains(id) ? Items[id] : null);
     }
 
     public static Item Get(string name)
@@ -60,11 +100,7 @@ public class Item : ScriptableObject
 
     public static string GetName(int id)
     {
-        if (id >= Items.Count || id < 0)
-        {
-            return ("");
-        }
-        return (Items[id].name);
+        return (Contains(id) ? Items[id].name : "null");
     }
 
     public static void Add(Item item)
@@ -75,12 +111,21 @@ public class Item : ScriptableObject
 
     public static void Spawn(int id, Vector3 position)
     {
-        ItemObject obj = GameObject.Instantiate<ItemObject>(Item.Get(id).prefab);
+        GameObject obj = GameObject.Instantiate<GameObject>(Item.Get(id).prefab);
 
-        obj.id = id;
+        obj.transform.position = position;
+        obj.AddComponent<ItemObject>().id = id;
     }
 
-    public ItemObject prefab;
+    public static void DrawGUIItem(int id)
+    {
+        if (Contains(id))
+        {
+            GUI.Label(new Rect(Screen.width / 2, Screen.height / 2, 100, 100), Item.Get(id).name);
+        }
+    }
+
+    public GameObject prefab;
 
     public Vector2Int slotSize;
 

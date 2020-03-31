@@ -2,17 +2,22 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Recipe : MonoBehaviour
+[CreateAssetMenu(fileName = "new_recipe", menuName = "Thing/Recipe")]
+public class Recipe : ScriptableObject
 {
-    // Start is called before the first frame update
-    void Start()
+    private Inventory inv;
+
+    public Inventory Inv
     {
-        
+        get
+        {
+            if (inv == null)
+            {
+                inv = new Inventory();
+            }
+            return (inv);
+        }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public int result;
 }

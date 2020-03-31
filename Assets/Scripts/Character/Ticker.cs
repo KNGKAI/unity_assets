@@ -1,5 +1,7 @@
 ﻿public struct Ticker
 {
+    public readonly static int DefaultTick = 3;
+
     private int tick;
 
     public int Tick
@@ -28,7 +30,7 @@
 
     public void Act()
     {
-        Act(3);
+        Act(DefaultTick);
     }
 
     public void Act(int a)

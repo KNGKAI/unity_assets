@@ -2,41 +2,75 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteInEditMode]
+//[ExecuteInEditMode]
 public class Test : MonoBehaviour
 {
     public Player character;
+    public Weapon weapon;
+    public Recipe recipe;
 
     Vector2 move;
+    Vector2 mouse;
 
-    private void Start()
+    bool preview;
+    int itemPreview;
+
+    void Start()
     {
-        Terrain.Chunk.Update(character.transform.position.x, transform.position.z);
+        Item.Spawn(0, Vector3.right * 2 + Vector3.up * 2);
+        Item.Spawn(1, Vector3.left * 2 + Vector3.up * 2);
+        Item.Spawn(2, Vector3.back * 3 + Vector3.up * 3);
+        Item.Spawn(0, Vector3.left * 4 + Vector3.up * 2);
+        Item.Spawn(2, Vector3.back * 3 + Vector3.up * 2);
+        Item.Spawn(1, Vector3.left * 2 + Vector3.up * 3);
+        Item.Spawn(0, Vector3.back * 2 + Vector3.up * 4);
     }
 
     void Update()
     {
-        move.x = (move.x + Input.GetAxis("Horizontal")) / 2.0f;
-        move.y = (move.y + Input.GetAxis("Vertical")) / 2.0f;
-        if (move.magnitude != 0.0f)
+        Terrain.Chunk.Update(character.transform.position.x, character.transform.position.z);
+
+        move.x = Input.GetAxisRaw("Horizontal");
+        move.y = Input.GetAxisRaw("Vertical");
+
+        mouse.x = -Input.GetAxis("Mouse Y");
+        mouse.y = Input.GetAxis("Mouse X");
+
+        character.Controll(
+            move.x,
+            move.y,
+            mouse.x,
+            mouse.y,
+            Input.GetKey(KeyCode.Space),        //jump
+            Input.GetKey(KeyCode.LeftShift)     //sprint
+            );
+
+        switch (character.stanceSettings.type)
         {
-            character.Move(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+            case CharacterStance.StanceSettings.CharacterStanceType.Hold:
+                if (Input.GetKey(KeyCode.LeftControl))
+                {
+                    character.Crouch();
+                }
+                else if (Input.GetKey(KeyCode.Z))
+                {
+                    character.Prone();
+                }
+                break;
+            case CharacterStance.StanceSettings.CharacterStanceType.Toggle:
+                if (Input.GetKeyDown(KeyCode.LeftControl))
+                {
+                    character.Crouch();
+                }
+                if (Input.GetKeyDown(KeyCode.Z))
+                {
+                    character.Prone();
+                }
+                break;
+            default:
+                break;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            character.Jump();
-        }
-        if (Input.GetKey(KeyCode.LeftControl))
-        {
-            character.Crouch();
-        }
-        if (Input.GetKey(KeyCode.LeftShift))
-        {
-            character.Sprint();
-        }
-
-        character.Rotate(-Input.GetAxis("Mouse Y"), Input.GetAxis("Mouse X"));
         if (Input.GetKeyDown(KeyCode.Minus))
         {
             character.ZoomOut();
@@ -46,20 +80,50 @@ public class Test : MonoBehaviour
             character.ZoomIn();
         }
 
-        if (Input.GetKeyDown(KeyCode.Mouse1))
+        if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            PickUpItem();
+            weapon.Fire(0, character.Body.Velocity);
+        }
+
+        preview = CheckItem(out ItemObject item);
+        if (preview)
+        {
+            if (Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                character.Inventory.Add(item.id);
+                Destroy(item.gameObject);
+            }
+            itemPreview = item.id;
+        }
+
+        if ((Input.GetKeyDown(KeyCode.E)))
+        {
+            if (!Item.Craft(ref character.Inventory, recipe))
+            {
+                Debug.Log("error");
+            }
         }
     }
 
-    void PickUpItem()
+    void OnGUI()
     {
-        if (Physics.Raycast(character.Camera.transform.position, character.Camera.transform.forward, out RaycastHit hit, 100))
+        if (preview)
         {
-            if (hit.collider.TryGetComponent<ItemObject>(out ItemObject item))
+            Item.DrawGUIItem(itemPreview);
+        }
+    }
+
+    bool CheckItem(out ItemObject item)
+    {
+        item = null;
+        if (Physics.Raycast(character.Camera.transform.position, character.Camera.transform.forward, out RaycastHit hit, 100, CharacterPhysicsBody.Mask))
+        {
+            if (hit.collider.TryGetComponent<ItemObject>(out ItemObject i))
             {
-                character.inventory.Add(item.id);
+                item = i;
+                return (true);
             }
         }
+        return (false);
     }
 }

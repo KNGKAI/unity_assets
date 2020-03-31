@@ -24,6 +24,8 @@ public class ItemEditor : EditorWindow
         editingItem = -1;
     }
 
+    private Vector2 scrollPosition;
+
     private void OnGUI()
     {
         GUILayout.Label("Items");
@@ -33,16 +35,18 @@ public class ItemEditor : EditorWindow
             Item.LoadAll();
         }
 
+        EditorGUILayout.BeginScrollView(scrollPosition, false, true);
         for (int i = 0; i < Items.Count; i++)
         {
             if (i == editingItem)
             {
                 EditorGUILayout.BeginHorizontal();
 
-                Items[i].sprite = (Texture2D)EditorGUILayout.ObjectField("Sprite", Items[i].sprite, typeof(Texture2D));
+                Items[i].sprite = (Texture2D)EditorGUILayout.ObjectField("Sprite", Items[i].sprite, typeof(Texture2D), false);
                 Items[i].name = EditorGUILayout.TextField("Name", Items[i].name);
                 Items[i].slotSize = EditorGUILayout.Vector2IntField("Slot Size", Items[i].slotSize);
-                
+                Items[i].prefab = (GameObject)EditorGUILayout.ObjectField("Prefab", Items[i].sprite, typeof(GameObject), false);
+
                 if (GUILayout.Button("Back"))
                 {
                     editingItem = -1;
@@ -67,5 +71,8 @@ public class ItemEditor : EditorWindow
                 GUILayout.EndHorizontal();
             }
         }
+        EditorGUILayout.EndScrollView();
+
+        scrollPosition.y += Input.mouseScrollDelta.y;
     }
 }

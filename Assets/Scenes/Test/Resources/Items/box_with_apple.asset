@@ -10,8 +10,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 739fc4522c6108c4f8b05cacd93e83dd, type: 3}
-  m_Name: bananna
+  m_Name: box_with_apple
   m_EditorClassIdentifier: 
-  prefab: {fileID: 843599488664624000, guid: 75315f739f77b64439ffbeb092be4d81, type: 3}
+  prefab: {fileID: 0}
   slotSize: {x: 0, y: 0}
-  sprite: {fileID: 2800000, guid: 5b1a64ea234fb2343b8d0686c51280de, type: 3}
+  sprite: {fileID: 0}
